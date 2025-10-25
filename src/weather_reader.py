@@ -8,6 +8,7 @@ Module pour charger les fichiers GRIB et préparer les données de vent
 import numpy as np
 import xarray as xr
 from pathlib import Path
+from datetime import datetime, timezone
 
 
 # === Fonctions principales ===
@@ -57,11 +58,10 @@ def load_multiple_gribs(paths: list, fields: list = ["u10","v10"], step_type: st
         elif 'forecast_time' in ds.variables:
             time_val = ds['forecast_time'].item()
         else:
-            time_val = xr.DataArray([0], dims="time")  # fallback
+            time_val = datetime.now(timezone.utc)
         
         # Ajouter dimension time si nécessaire
         if 'time' not in ds.dims:
-            print(time_val)
             ds = ds.expand_dims(time=time_val)
 
         datasets.append(ds)
@@ -82,7 +82,23 @@ def subset_domain(ds: xr.Dataset, lat_min: float, lat_max: float,
     Returns:
         xr.Dataset: dataset limité au domaine spécifié.
     """
-    pass  # implémentation à venir
+    lat_name = 'latitude' if 'latitude' in ds.coords else 'lat'
+    lon_name = 'longitude' if 'longitude' in ds.coords else 'lon'
+
+    ds_subset = ds.sel(
+        {lat_name: slice(lat_min, lat_max),
+         lon_name: slice(lon_min, lon_max)}
+    )
+    return ds_subset
+
+def compute_wind_speed_direction(u: xr.DataArray, v: xr.DataArray) -> tuple:
+    """
+    Calcule la vitesse et la direction du vent à partir des composantes u et v.
+    """
+    speed = np.sqrt(u**2 + v**2)
+    # direction : angle du vent d’où il vient (en degrés, 0=Nord, 90=Est)
+    direction = (np.arctan2(u, v) * 180 / np.pi) % 360
+    return speed, direction
 
 
 def extract_wind(ds: xr.Dataset) -> dict:
@@ -102,18 +118,22 @@ def extract_wind(ds: xr.Dataset) -> dict:
             'direction': xr.DataArray (optionnel)
         }
     """
-    pass  # implémentation à venir
+    if 'u10' not in ds.variables or 'v10' not in ds.variables:
+        raise ValueError("Les variables u10 et v10 doivent être présentes dans le dataset.")
 
+    u = ds['u10']
+    v = ds['v10']
+    speed, direction = compute_wind_speed_direction(u, v)
 
-def compute_wind_speed_direction(u: xr.DataArray, v: xr.DataArray) -> tuple:
-    """
-    Calcule la vitesse et la direction du vent à partir des composantes u et v.
+    # Ajuster les noms des coordonnées
+    lat_name = 'latitude' if 'latitude' in ds.coords else 'lat'
+    lon_name = 'longitude' if 'longitude' in ds.coords else 'lon'
 
-    Args:
-        u (xr.DataArray): composante zonale (Ouest-Est).
-        v (xr.DataArray): composante méridienne (Sud-Nord).
-
-    Returns:
-        tuple: (speed: xr.DataArray, direction: xr.DataArray)
-    """
-    pass  # implémentation à venir
+    return {
+        'u': u,
+        'v': v,
+        'lat': ds[lat_name],
+        'lon': ds[lon_name],
+        'speed': speed,
+        'direction': direction
+    }
