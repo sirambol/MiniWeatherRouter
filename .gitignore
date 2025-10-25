@@ -1,0 +1,48 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+.venv/
+env/
+venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# ================================
+# Data
+# ================================
+# Ne pas versionner les fichiers GRIB ou autres données lourdes
+data/raw/
+*.grib2
+*.nc
+
+# ================================
+# VS Code
+# ================================
+.vscode/
+*.code-workspace
+
+# ================================
+# Logs / caches
+# ================================
+*.log
+*.tmp
+*.bak
+
+# ================================
+# Jupyter / Notebook checkpoints (si ajoutés plus tard)
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# System files
+# ================================
+.DS_Store
+Thumbs.db

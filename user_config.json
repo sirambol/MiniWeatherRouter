@@ -1,0 +1,6 @@
+{
+  "run_hour": "06",
+  "forecast_hours": ["006", "012", "018"],
+  "resolution": "0p25"
+}
+

@@ -1,0 +1,10 @@
+numpy
+pandas
+xarray
+cfgrib
+matplotlib
+cartopy
+tqdm
+requests
+scipy
+
