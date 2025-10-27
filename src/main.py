@@ -1,8 +1,9 @@
 import json
-from pathlib import Path
-from weather_dl import download_gfs_data
 from config import DATA_DIR, RUN_HOUR, FORECAST_HOURS, RESOLUTION
-from weather_reader import load_grib_file, load_multiple_gribs
+from weather_dl import download_ecmwf_wind
+from weather_reader import load_grib_file, subset_domain, extract_wind
+from config import LAT_MIN, LAT_MAX, LON_MIN, LON_MAX
+import xarray as xr
 
 def load_user_config(path: str = "user_config.json"):
     """
@@ -16,47 +17,44 @@ def load_user_config(path: str = "user_config.json"):
         print(f"{path} non trouvé, utilisation valeurs par défaut")
         return {}
 
-
 def main():
-    """
-    Entry point for Mini Weather Router
-    Télécharge fichier grib
-    """
+    print("=== Mini Weather Router ===\n")
 
-    """     print("Initialisation des données")
-    user_cfg = load_user_config()
-
-    run_hour = user_cfg.get("run_hour", RUN_HOUR)
-    forecast_hours = user_cfg.get("forecast_hours", FORECAST_HOURS)
-    resolution = user_cfg.get("resolution", RESOLUTION)
-
-    # Téléchargement des fichiers GRIB
-    paths = download_gfs_data(
-        run_hour=run_hour,         
-        forecast_hours=forecast_hours,
-        resolution=resolution,
-        out_dir=DATA_DIR
+    # Télécharger grib
+    print("Téléchargement des données ECMWF pour le vent...")
+    grib_file = download_ecmwf_wind(
+        start_date="2025-10-21",
+        area=[LAT_MAX, LON_MIN, LAT_MIN, LON_MAX],
+        out_dir="data/raw",
+        filename="era5_wind_2025-10-21.grib"
     )
+    print(f"Fichier téléchargé : {grib_file}\n")
 
-    print("Téléchargements effectués:")
-    for p in paths:
-        print(" -", p) """
+    # Charger GRIB
+    print("Lecture du fichier GRIB...")
+    ds = load_grib_file(grib_file)
+    print(ds)
+    print("\n")
 
-    """     
-    ds = load_grib_file("./data/raw/gfs.t06z.pgrb2.0p25.f006")
-    print(ds) 
-    """
+    # Restreindre au domaine souhaité
+    print("Découpage du domaine...")
+    ds_subset = subset_domain(ds, LAT_MIN, LAT_MAX, LON_MIN, LON_MAX)
+    print(ds_subset)
+    print("\n")
 
-    paths = [
-    "data/raw/gfs.t06z.pgrb2.0p25.f006",
-    "data/raw/gfs.t06z.pgrb2.0p25.f012",
-    "data/raw/gfs.t06z.pgrb2.0p25.f018"
-]
+    # Extraire composantes du vent
+    print("Extraction du vent (u, v, speed, direction)...")
+    wind = extract_wind(ds_subset)
 
-    ds_multi = load_multiple_gribs(paths, fields=["u10","v10"], step_type="instant")
-    print(ds_multi)
+    # Résultats
+    print("=== Résumé ===")
+    print("Dimensions u10 :", wind['u'].shape)
+    print("Latitudes :", wind['lat'].values)
+    print("Longitudes :", wind['lon'].values)
+    print("Vitesse du vent (m/s) :", wind['speed'].values)
+    print("Direction du vent :", wind['direction'].values)
 
-
+    print("\nDonnées prêtes pour l'algorithme de routage !")
 
 if __name__ == "__main__":
     main()

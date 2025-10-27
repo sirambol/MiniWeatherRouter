@@ -12,6 +12,11 @@ FORECAST_HOURS = ["000", "006"] # Échéances à télécharger
 RESOLUTION = "0p50"             # Résolution du modèle (0p25, 0p50, 1p00)
 
 # === Domaine géographique ===
+LAT_MIN = 35.0
+LAT_MAX = 50.0
+LON_MIN = -35.0
+LON_MAX = 0.0
+
 DOMAIN = {
     "lat_min": 35.0,
     "lat_max": 50.0,

@@ -9,18 +9,18 @@ import numpy as np
 import xarray as xr
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import List
 
 
 # === Fonctions principales ===
 
-def load_grib_file(path: str, fields: list = ["u10", "v10"], step_type: str = "instant") -> xr.Dataset:
+def load_grib_file(path: str, fields: list = ["u10", "v10"]) -> xr.Dataset:
     """
     Charge un fichier GRIB en xarray.Dataset.
 
     Args:
         path (str): chemin vers le fichier GRIB.
         fields (list): liste des variables à charger, par défaut ['u10','v10'].
-        step_type (str): type de pas de temps ('instant', 'avg', 'accum').
 
     Returns:
         xr.Dataset: dataset contenant les champs spécifiés et les coordonnées lat/lon.
@@ -32,11 +32,17 @@ def load_grib_file(path: str, fields: list = ["u10", "v10"], step_type: str = "i
     try:
         ds = xr.open_dataset(
             path, 
-            engine="cfgrib", 
-            filter_by_keys={'typeOfLevel': 'surface', 'stepType': 'instant'}
+            engine="cfgrib"
         )
         vars_to_keep = [v for v in fields if v in ds.variables]
         ds = ds[vars_to_keep]
+
+        if 'time' not in ds.dims:
+            if 'valid_time' in ds.variables:
+                time_val = np.datetime64(ds['valid_time'].item())
+            else:
+                time_val = np.datetime64(datetime.now(timezone.utc))
+            ds = ds.expand_dims(time=[time_val])
 
         return ds
     
@@ -45,25 +51,22 @@ def load_grib_file(path: str, fields: list = ["u10", "v10"], step_type: str = "i
     
 
 
-def load_multiple_gribs(paths: list, fields: list = ["u10","v10"], step_type: str = "instant") -> xr.Dataset:
+def load_multiple_gribs(paths: list, fields: list = ["u10","v10"]) -> xr.Dataset:
+    """
+    Charge et concatène plusieurs fichiers GRIB le long de la dimension 'time'.
+
+    Args:
+        paths (list): chemins vers les fichiers GRIB
+        fields (list): variables à charger
+
+    Returns:
+        xr.Dataset
+    """
+
     datasets = []
 
     for path in paths:
-        ds = load_grib_file(path, fields=fields, step_type=step_type)
-        
-        # Créer la dimension 'time' depuis valid_time si disponible
-        if 'valid_time' in ds.variables:
-            time_val = ds['valid_time'].item()
-            
-        elif 'forecast_time' in ds.variables:
-            time_val = ds['forecast_time'].item()
-        else:
-            time_val = datetime.now(timezone.utc)
-        
-        # Ajouter dimension time si nécessaire
-        if 'time' not in ds.dims:
-            ds = ds.expand_dims(time=time_val)
-
+        ds = load_grib_file(path, fields=fields)
         datasets.append(ds)
 
     combined = xr.concat(datasets, dim="time")
@@ -85,9 +88,12 @@ def subset_domain(ds: xr.Dataset, lat_min: float, lat_max: float,
     lat_name = 'latitude' if 'latitude' in ds.coords else 'lat'
     lon_name = 'longitude' if 'longitude' in ds.coords else 'lon'
 
+    lat_slice = slice(lat_max, lat_min) if ds[lat_name][0] > ds[lat_name][-1] else slice(lat_min, lat_max)
+    lon_slice = slice(lon_min, lon_max)
+
     ds_subset = ds.sel(
-        {lat_name: slice(lat_min, lat_max),
-         lon_name: slice(lon_min, lon_max)}
+        {lat_name: lat_slice,
+         lon_name: lon_slice}
     )
     return ds_subset
 
