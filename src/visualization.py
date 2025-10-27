@@ -53,11 +53,11 @@ def plot_wind_map(wind):
     )
 
     # Ajouter un titre
-    ax.set_title("Vent à 10m - Intensité et direction\nPrévision: {forecast_time}", fontsize=16)
+    ax.set_title(f"Vent à 10m - Intensité et direction\nPrévision: {forecast_time}", fontsize=16)
 
     # Ajouter une colorbar
     norm = mpl.colors.Normalize(vmin=np.min(speed), vmax=np.max(speed))
-    sm = mpl.cm.ScalarMappable(cmap='coolwarm', norm=norm)
+    sm = mpl.cm.ScalarMappable(cmap=cmap_custom, norm=norm)
     sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, orientation='vertical', pad=0.05, aspect=30)
     cbar.set_label("Vitesse du vent (m/s)")
