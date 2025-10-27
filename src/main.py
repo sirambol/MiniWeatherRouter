@@ -4,6 +4,7 @@ from weather_dl import download_ecmwf_wind
 from weather_reader import load_grib_file, subset_domain, extract_wind
 from config import LAT_MIN, LAT_MAX, LON_MIN, LON_MAX
 import xarray as xr
+from visualization import plot_wind_map
 
 def load_user_config(path: str = "user_config.json"):
     """
@@ -55,6 +56,9 @@ def main():
     print("Direction du vent :", wind['direction'].values)
 
     print("\nDonnées prêtes pour l'algorithme de routage !")
+
+    plot_wind_map(wind)
+    
 
 if __name__ == "__main__":
     main()
