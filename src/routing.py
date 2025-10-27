@@ -24,10 +24,10 @@ def wind_angle_to_course(u, v, course_deg):
     course_deg : cap du bateau en degrés (0=nord, 90=est)
     Retour : angle du vent relatif (0=vent de face, 180=vent arrière)
     """
-    # direction du vent d’où il vient (0=N, 90=E)
-    wind_dir_deg = (np.arctan2(u, v) * 180 / np.pi) % 360
+    # relevé origine vent
+    wind_dir_deg = (np.arctan2(u, v) * 180 / np.pi+180) % 360
     # angle relatif
-    angle = (wind_dir_deg - course_deg) % 360
+    angle = (wind_dir_deg - (course_deg)) % 360
     if angle > 180:
         angle = 360 - angle
     return angle
@@ -84,10 +84,17 @@ def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_
     """
     speeds = []
     angles = []
+    course_deg_list = []
+    wind_speed_list = []
+    wind_dir_list = []
+    u_local_list = []
+    v_local_list = []
 
     for idx, (i,j) in enumerate(path):
         u_local = u_wind[i,j]
         v_local = v_wind[i,j]
+        u_local_list.append(u_local)
+        v_local_list.append(v_local)
 
         # Calcul du cap vers le prochain point
         if idx < len(path)-1:
@@ -100,8 +107,13 @@ def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_
 
         angle_rel = wind_angle_to_course(u_local, v_local, course_deg)
         speed = boat_speed_fn(angle_rel)
+        wind_speed = np.sqrt(u_local**2 + v_local**2)
+        wind_dir = (np.arctan2(u_local, v_local) * 180/np.pi) % 360
 
         speeds.append(speed)
         angles.append(angle_rel)
+        course_deg_list.append(course_deg)
+        wind_speed_list.append(wind_speed)
+        wind_dir_list.append(wind_dir)
 
-    return speeds, angles
+    return speeds, angles, course_deg_list, wind_speed_list, wind_dir_list, u_local_list, v_local_list
