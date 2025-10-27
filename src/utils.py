@@ -21,3 +21,4 @@ def find_closest_node(lat2d, lon2d, lat_pt, lon_pt):
     dist2 = (lat2d - lat_pt)**2 + (lon2d - lon_pt)**2
     i,j = np.unravel_index(np.argmin(dist2), lat2d.shape)
     return (i,j)
+

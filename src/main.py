@@ -5,10 +5,10 @@ from weather_reader import load_grib_file, subset_domain, extract_wind
 from config import LAT_MIN, LAT_MAX, LON_MIN, LON_MAX
 import xarray as xr
 from visualization import plot_wind_map, plot_wind_map_with_route
-from routing import build_graph, create_grid
+from routing import build_graph, create_grid, compute_route_metrics_simple
 import networkx as nx
 from utils import find_closest_node
-
+from boat_model import boat_speed
 
 def load_user_config(path: str = "user_config.json"):
     """
@@ -93,6 +93,12 @@ def main():
 
     path_lats = [lat2d[i,j] for i,j in path]
     path_lons = [lon2d[i,j] for i,j in path]
+
+    speeds, angles = compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed)
+
+    for idx, (lat, lon, spd, ang) in enumerate(zip(path_lats, path_lons, speeds, angles)):
+        print(f"Point {idx}: lat={lat:.2f}, lon={lon:.2f}, vitesse={spd:.1f} nds, angle vent={ang:.1f}°")
+
 
     plot_wind_map_with_route(wind, path_lats, path_lons)
 

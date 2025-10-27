@@ -73,3 +73,35 @@ def build_graph(lat2d, lon2d, u_wind, v_wind, resolution_deg=1.0):
                         # ajouter l’arête
                         G.add_edge(node, (ni,nj), weight=time_h)
     return G
+
+
+def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_fn):
+    """
+    Pour chaque noeud du chemin, calcule :
+        - vitesse du bateau (noeuds)
+        - angle relatif au vent (degrés)
+    Utilise directement les valeurs u/v de la grille.
+    """
+    speeds = []
+    angles = []
+
+    for idx, (i,j) in enumerate(path):
+        u_local = u_wind[i,j]
+        v_local = v_wind[i,j]
+
+        # Calcul du cap vers le prochain point
+        if idx < len(path)-1:
+            ni, nj = path[idx+1]
+            dy = lat2d[ni,nj] - lat2d[i,j]
+            dx = lon2d[ni,nj] - lon2d[i,j]
+            course_deg = (np.degrees(np.arctan2(dx, dy))) % 360
+        else:
+            course_deg = 0  # dernier point
+
+        angle_rel = wind_angle_to_course(u_local, v_local, course_deg)
+        speed = boat_speed_fn(angle_rel)
+
+        speeds.append(speed)
+        angles.append(angle_rel)
+
+    return speeds, angles
