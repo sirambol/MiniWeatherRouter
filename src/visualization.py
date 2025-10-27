@@ -63,3 +63,61 @@ def plot_wind_map(wind):
     cbar.set_label("Vitesse du vent (m/s)")
 
     plt.show()
+
+def plot_wind_map_with_route(wind, path_lats=None, path_lons=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import matplotlib as mpl
+
+    u = wind['u'].values[0,:,:] if wind['u'].ndim == 3 else wind['u'].values
+    v = wind['v'].values[0,:,:] if wind['v'].ndim == 3 else wind['v'].values
+    speed = wind['speed'].values[0,:,:] if wind['speed'].ndim == 3 else wind['speed'].values
+
+    lat_1d = wind['lat'].values
+    lon_1d = wind['lon'].values
+
+    if 'time' in wind['u'].dims:
+        forecast_time = np.datetime_as_string(wind['u']['time'].values[0], unit='h')
+    else:
+        forecast_time = "Date inconnue"
+
+    lon2d, lat2d = np.meshgrid(lon_1d, lat_1d)
+
+    fig = plt.figure(figsize=(12,10))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.add_feature(cfeature.LAND, facecolor='lightyellow')
+    ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+    ax.coastlines(resolution='10m')
+
+    skip = (slice(None, None, 5), slice(None, None, 5))
+    colors = ["green", "yellow", "red", "purple"]
+    cmap_custom = mpl.colors.LinearSegmentedColormap.from_list("wind_cmap", colors)
+
+    q = ax.quiver(
+        lon2d[skip], lat2d[skip],
+        u[skip], v[skip],
+        speed[skip],
+        scale=500,
+        cmap=cmap_custom,
+        width=0.002,
+        transform=ccrs.PlateCarree()
+    )
+
+    # Colorbar
+    norm = mpl.colors.Normalize(vmin=np.min(speed), vmax=np.max(speed))
+    sm = mpl.cm.ScalarMappable(cmap=cmap_custom, norm=norm)
+    sm.set_array([])
+    cbar = plt.colorbar(sm, ax=ax, orientation='vertical', pad=0.05, aspect=30)
+    cbar.set_label("Vitesse du vent (m/s)")
+
+    # Ajouter le chemin
+    if path_lats is not None and path_lons is not None:
+        ax.plot(path_lons, path_lats, color='blue', linewidth=2, marker='o', markersize=3,
+                label='Route optimale')
+
+    ax.set_title(f"Vent à 10m - Route optimale\nPrévision : {forecast_time}", fontsize=16)
+    ax.legend()
+
+    plt.show()

@@ -4,7 +4,11 @@ from weather_dl import download_ecmwf_wind
 from weather_reader import load_grib_file, subset_domain, extract_wind
 from config import LAT_MIN, LAT_MAX, LON_MIN, LON_MAX
 import xarray as xr
-from visualization import plot_wind_map
+from visualization import plot_wind_map, plot_wind_map_with_route
+from routing import build_graph, create_grid
+import networkx as nx
+from utils import find_closest_node
+
 
 def load_user_config(path: str = "user_config.json"):
     """
@@ -57,8 +61,40 @@ def main():
 
     print("\nDonnées prêtes pour l'algorithme de routage !")
 
-    plot_wind_map(wind)
-    
+    #plot_wind_map(wind)
+
+    ### Routage
+    # Créer la grille
+    lat2d, lon2d = create_grid(LAT_MIN, LAT_MAX, LON_MIN, LON_MAX, resolution=1.0)
+
+    # Extraire les composantes du vent
+    wind = extract_wind(ds_subset)
+    u_wind = wind['u'].values[0,:,:]  # premier pas de temps
+    v_wind = wind['v'].values[0,:,:]
+
+    # Construire le graphe
+    G = build_graph(lat2d, lon2d, u_wind, v_wind)
+    print(f"Graphe créé avec {G.number_of_nodes()} noeuds et {G.number_of_edges()} arêtes")
+
+    # Route la plus courte Dijkstra
+
+    # Points de départ/arrivée
+    start_lat, start_lon = 46.5, -1.8   # Les Sables d’Olonne
+    end_lat, end_lon = 38.5, -28.6      # Horta, Açores
+
+    start_node = find_closest_node(lat2d, lon2d, start_lat, start_lon)
+    end_node = find_closest_node(lat2d, lon2d, end_lat, end_lon)
+
+    # Calcul du chemin le plus rapide
+    path = nx.dijkstra_path(G, source=start_node, target=end_node, weight='weight')
+    total_time = nx.dijkstra_path_length(G, source=start_node, target=end_node, weight='weight')
+
+    print(f"Chemin trouvé avec {len(path)} étapes, temps total estimé : {total_time:.1f} h")
+
+    path_lats = [lat2d[i,j] for i,j in path]
+    path_lons = [lon2d[i,j] for i,j in path]
+
+    plot_wind_map_with_route(wind, path_lats, path_lons)
 
 if __name__ == "__main__":
     main()
