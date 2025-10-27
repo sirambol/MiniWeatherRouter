@@ -65,7 +65,7 @@ def build_graph(lat2d, lon2d, u_wind, v_wind, resolution_deg=1.0):
                         angle_rel = wind_angle_to_course(u_wind[i,j], v_wind[i,j], course_deg)
 
                         # vitesse du bateau selon la polaire
-                        speed = boat_speed(angle_rel)  # en noeuds
+                        speed = boat_speed(angle_rel, np.sqrt(u_wind[i,j]**2+ v_wind[i,j]**2))  # en noeuds
 
                         # temps de trajet (heures)
                         time_h = dist / speed if speed > 0 else np.inf
@@ -106,9 +106,9 @@ def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_
             course_deg = 0  # dernier point
 
         angle_rel = wind_angle_to_course(u_local, v_local, course_deg)
-        speed = boat_speed_fn(angle_rel)
         wind_speed = np.sqrt(u_local**2 + v_local**2)
         wind_dir = (np.arctan2(u_local, v_local) * 180/np.pi) % 360
+        speed = boat_speed_fn(angle_rel, wind_speed)
 
         speeds.append(speed)
         angles.append(angle_rel)
