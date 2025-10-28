@@ -1,10 +1,8 @@
-import numpy as np
-
 def boat_speed(angle_deg: float, w_speed: float) -> float:
     """
     Polaire simplifiée : vitesse du bateau selon l'angle du vent apparent
-    angle_deg : angle vent → bateau (0=vent de face, 180=vent arrière)
-    Retour : vitesse du bateau en noeuds
+    angle_deg : angle vent-bateau (0=vent de face, 180=vent arrière)
+    Retour : vitesse (noeuds)
     """
     if angle_deg < 0:  # normaliser
         angle_deg += 360

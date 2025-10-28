@@ -20,7 +20,7 @@ def create_grid(lat_min, lat_max, lon_min, lon_max, resolution=1.0):
 def wind_angle_to_course(u, v, course_deg):
     """
     Calculer l'angle du vent relatif au bateau (en degrés)
-    u, v : composantes du vent (m/s)
+    u, v : composantes du vent (m/s) eastward & northward
     course_deg : cap du bateau en degrés (0=nord, 90=est)
     Retour : angle du vent relatif (0=vent de face, 180=vent arrière)
     """
@@ -77,10 +77,10 @@ def build_graph(lat2d, lon2d, u_wind, v_wind, resolution_deg=1.0):
 
 def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_fn):
     """
-    Pour chaque noeud du chemin, calcule :
+    A chaque noeud, calcule :
         - vitesse du bateau (noeuds)
         - angle relatif au vent (degrés)
-    Utilise directement les valeurs u/v de la grille.
+    Pour debuggage
     """
     speeds = []
     angles = []
@@ -103,7 +103,7 @@ def compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed_
             dx = lon2d[ni,nj] - lon2d[i,j]
             course_deg = (np.degrees(np.arctan2(dx, dy))) % 360
         else:
-            course_deg = 0  # dernier point
+            course_deg = 0 
 
         angle_rel = wind_angle_to_course(u_local, v_local, course_deg)
         wind_speed = np.sqrt(u_local**2 + v_local**2)

@@ -94,13 +94,15 @@ def main():
     path_lats = [lat2d[i,j] for i,j in path]
     path_lons = [lon2d[i,j] for i,j in path]
 
+    
     speeds, angles, course_deg_list, wind_speed_list, wind_dir_list, u_loc_list, v_loc_list = compute_route_metrics_simple(path, lat2d, lon2d, u_wind, v_wind, boat_speed)
 
     for idx, (lat, lon, spd, ang, course, w_speed, w_dir, u_loc, v_loc) in enumerate(zip(path_lats, path_lons, speeds, angles, course_deg_list, wind_speed_list, wind_dir_list, u_loc_list, v_loc_list)):
         print(f"Point {idx}: lat={lat:.2f}, lon={lon:.2f}, "
           f"v_bateau={spd:.1f} nds, angle_vent={ang:.1f}°, "
           f"cap={course:.1f}°, vent={w_speed:.1f} m/s à {w_dir:.1f}°, "
-          f"vent_u = {u_loc:.1f}, vent_v={v_loc:.1f}")
+          f"vent_u = {u_loc:.1f}, vent_v={v_loc:.1f}") 
+    
 
 
     #plot_wind_map_with_route(wind, path_lats, path_lons)

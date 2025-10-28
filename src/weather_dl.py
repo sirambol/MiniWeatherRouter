@@ -86,12 +86,12 @@ def download_grib(url: str, save_dir: str = "data/raw") -> Path:
     with requests.get(url, stream=True) as r:
         r.raise_for_status()  # lève une erreur si le téléchargement échoue
         total_size = int(r.headers.get('content-length', 0))
-        chunk_size = 1024 * 1024  # 1 MB
+        chunk_size = 1024 * 1024  
 
         with open(file_path, 'wb') as f:
             downloaded = 0
             for chunk in r.iter_content(chunk_size=chunk_size):
-                if chunk:  # filtre les keep-alive
+                if chunk:  
                     f.write(chunk)
                     downloaded += len(chunk)
                     percent = downloaded / total_size * 100 if total_size else 0
@@ -157,6 +157,5 @@ def download_gfs_data(
 
 
 if __name__ == "__main__":
-    # Exemple d'utilisation
     paths = download_ecmwf_wind()
     print("Fichiers disponibles :", paths)

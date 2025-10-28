@@ -1,4 +1,3 @@
-# visualization_example.py
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import cartopy.crs as ccrs
@@ -6,11 +5,6 @@ import cartopy.feature as cfeature
 import numpy as np
 
 def plot_wind_map(wind):
-    """
-    Affiche les données de vent sur une carte style SHOM :
-    - Terre jaune, mer bleu
-    - Vent sous forme de flèches proportionnelles à l'intensité et orientées selon la direction
-    """
 
     u = wind['u'].values[0,:,:] if wind['u'].ndim == 3 else wind['u'].values
     v = wind['v'].values[0,:,:] if wind['v'].ndim == 3 else wind['v'].values

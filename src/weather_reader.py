@@ -1,18 +1,9 @@
-"""
-weather_reader.py
-
-Module pour charger les fichiers GRIB et préparer les données de vent
-(u10, v10) sur une grille pour le routage.
-"""
-
 import numpy as np
 import xarray as xr
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import List
 
-
-# === Fonctions principales ===
 
 def load_grib_file(path: str, fields: list = ["u10", "v10"]) -> xr.Dataset:
     """
